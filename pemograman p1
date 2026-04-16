@@ -1,0 +1,51 @@
+package prmograman.pkg2;
+
+import java.util.Scanner;
+
+public class Prmograman2 {
+
+    public static void main(String[] args) {
+        Scanner input = new Scanner(System.in);
+
+        String nim, nama, grade;
+        double uts, uas, rata;
+
+        System.out.println("Data Mahasiswa");
+
+        System.out.print("NIM: ");
+        nim = input.nextLine();
+
+        System.out.print("Nama: ");
+        nama = input.nextLine();
+
+        System.out.print("Nilai UTS: ");
+        uts = input.nextDouble();
+
+        System.out.print("Nilai UAS: ");
+        uas = input.nextDouble();
+
+        // Hitung rata-rata
+        rata = (uts + uas) / 2;
+
+        // Menentukan grade
+        if (rata >= 85) {
+            grade = "A";
+        } else if (rata >= 75) {
+            grade = "B";
+        } else if (rata >= 65) {
+            grade = "C";
+        } else if (rata >= 50) {
+            grade = "D";
+        } else {
+            grade = "E";
+        }
+
+        // Output
+        System.out.println("\n======================================");
+        System.out.println("NIM     Nama     UTS     UAS     Rata2     Grade");
+        System.out.println("======================================");
+
+        System.out.printf("%-12s %-20s %-5.1f %-5.1f %-7.1f %-2s\n",
+                nim, nama, uts, uas, rata, grade);
+    }
+}   
