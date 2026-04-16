@@ -1,0 +1,235 @@
+package latconsole;
+
+import Koneksi.Koneksi;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.event.*;
+import java.sql.*;
+
+public class FormDatabase extends JFrame {
+
+    JTextField txtNim, txtNama, txtUTS, txtUAS, txtCari;
+    JButton btnSimpan, btnEdit, btnHapus, btnCari;
+    JTable table;
+    DefaultTableModel model;
+
+    Connection conn;
+
+    public FormDatabase() {
+        setTitle("Database Mahasiswa");
+        setSize(650, 420);
+        setLayout(null);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        conn = Koneksi.getKoneksi();
+
+        // LABEL
+        JLabel l1 = new JLabel("NIM");
+        JLabel l2 = new JLabel("Nama");
+        JLabel l3 = new JLabel("UTS");
+        JLabel l4 = new JLabel("UAS");
+        JLabel l5 = new JLabel("Cari Nama");
+
+        // TEXTFIELD
+        txtNim = new JTextField();
+        txtNama = new JTextField();
+        txtUTS = new JTextField();
+        txtUAS = new JTextField();
+        txtCari = new JTextField();
+
+        // BUTTON
+        btnSimpan = new JButton("Simpan");
+        btnEdit = new JButton("Update");
+        btnHapus = new JButton("Hapus");
+        btnCari = new JButton("Cari");
+
+        // TABLE
+        model = new DefaultTableModel();
+        table = new JTable(model);
+        JScrollPane sp = new JScrollPane(table);
+
+        model.addColumn("NIM");
+        model.addColumn("Nama");
+        model.addColumn("UTS");
+        model.addColumn("UAS");
+
+        // POSISI
+        l1.setBounds(20, 20, 100, 25);
+        txtNim.setBounds(120, 20, 150, 25);
+
+        l2.setBounds(20, 50, 100, 25);
+        txtNama.setBounds(120, 50, 150, 25);
+
+        l3.setBounds(20, 80, 100, 25);
+        txtUTS.setBounds(120, 80, 150, 25);
+
+        l4.setBounds(20, 110, 100, 25);
+        txtUAS.setBounds(120, 110, 150, 25);
+
+        l5.setBounds(300, 20, 100, 25);
+        txtCari.setBounds(380, 20, 150, 25);
+        btnCari.setBounds(540, 20, 80, 25);
+
+        btnSimpan.setBounds(120, 150, 90, 30);
+        btnEdit.setBounds(220, 150, 90, 30);
+        btnHapus.setBounds(320, 150, 90, 30);
+
+        sp.setBounds(20, 200, 600, 150);
+
+        // ADD
+        add(l1); add(txtNim);
+        add(l2); add(txtNama);
+        add(l3); add(txtUTS);
+        add(l4); add(txtUAS);
+        add(l5); add(txtCari);
+        add(btnCari);
+        add(btnSimpan); add(btnEdit); add(btnHapus);
+        add(sp);
+
+        tampilData();
+
+        // ================= SIMPAN =================
+        btnSimpan.addActionListener(e -> {
+            try {
+                if (txtNim.getText().isEmpty() || txtNama.getText().isEmpty()
+                        || txtUTS.getText().isEmpty() || txtUAS.getText().isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "Semua field wajib diisi!");
+                    return;
+                }
+
+                String sql = "INSERT INTO datamhs (nim,nama,uts,uas) VALUES (?,?,?,?)";
+                PreparedStatement ps = conn.prepareStatement(sql);
+
+                ps.setString(1, txtNim.getText());
+                ps.setString(2, txtNama.getText());
+                ps.setDouble(3, Double.parseDouble(txtUTS.getText()));
+                ps.setDouble(4, Double.parseDouble(txtUAS.getText()));
+
+                ps.executeUpdate();
+
+                JOptionPane.showMessageDialog(null, "Data berhasil disimpan");
+                tampilData();
+                clearForm();
+
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(null, ex.getMessage());
+            }
+        });
+
+        // ================= UPDATE =================
+        btnEdit.addActionListener(e -> {
+            try {
+                String sql = "UPDATE datamhs SET nama=?, uts=?, uas=? WHERE nim=?";
+                PreparedStatement ps = conn.prepareStatement(sql);
+
+                ps.setString(1, txtNama.getText());
+                ps.setDouble(2, Double.parseDouble(txtUTS.getText()));
+                ps.setDouble(3, Double.parseDouble(txtUAS.getText()));
+                ps.setString(4, txtNim.getText());
+
+                ps.executeUpdate();
+
+                JOptionPane.showMessageDialog(null, "Data berhasil diupdate");
+                tampilData();
+                clearForm();
+
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(null, ex.getMessage());
+            }
+        });
+
+        // ================= HAPUS =================
+        btnHapus.addActionListener(e -> {
+            try {
+                int confirm = JOptionPane.showConfirmDialog(null,
+                        "Yakin ingin menghapus data?", "Konfirmasi",
+                        JOptionPane.YES_NO_OPTION);
+
+                if (confirm == JOptionPane.YES_OPTION) {
+
+                    String sql = "DELETE FROM datamhs WHERE nim=?";
+                    PreparedStatement ps = conn.prepareStatement(sql);
+
+                    ps.setString(1, txtNim.getText());
+                    ps.executeUpdate();
+
+                    JOptionPane.showMessageDialog(null, "Data berhasil dihapus");
+
+                    tampilData();
+                    clearForm();
+                }
+
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(null, ex.getMessage());
+            }
+        });
+
+        // ================= CARI =================
+        btnCari.addActionListener(e -> {
+            try {
+                String sql = "SELECT * FROM datamhs WHERE nama LIKE '%" + txtCari.getText() + "%'";
+                Statement st = conn.createStatement();
+                ResultSet rs = st.executeQuery(sql);
+
+                model.setRowCount(0);
+
+                while (rs.next()) {
+                    model.addRow(new Object[]{
+                        rs.getString("nim"),
+                        rs.getString("nama"),
+                        rs.getDouble("uts"),
+                        rs.getDouble("uas")
+                    });
+                }
+
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(null, ex.getMessage());
+            }
+        });
+
+        // ================= KLIK TABEL =================
+        table.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                int row = table.getSelectedRow();
+
+                txtNim.setText(model.getValueAt(row, 0).toString());
+                txtNama.setText(model.getValueAt(row, 1).toString());
+                txtUTS.setText(model.getValueAt(row, 2).toString());
+                txtUAS.setText(model.getValueAt(row, 3).toString());
+            }
+        });
+    }
+
+    // ================= TAMPIL DATA =================
+    void tampilData() {
+        try {
+            model.setRowCount(0);
+            Statement st = conn.createStatement();
+            ResultSet rs = st.executeQuery("SELECT * FROM datamhs");
+
+            while (rs.next()) {
+                model.addRow(new Object[]{
+                    rs.getString("nim"),
+                    rs.getString("nama"),
+                    rs.getDouble("uts"),
+                    rs.getDouble("uas")
+                });
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    // ================= CLEAR FORM =================
+    void clearForm() {
+        txtNim.setText("");
+        txtNama.setText("");
+        txtUTS.setText("");
+        txtUAS.setText("");
+    }
+
+    public static void main(String[] args) {
+        new FormDatabase().setVisible(true);
+    }
+}
